@@ -164,11 +164,27 @@
             </div>
             <div class="p-8 overflow-y-auto grid grid-cols-1 md:grid-cols-2 gap-8">
                 @foreach($services as $service)
-                    <div class="flex gap-4 p-4 bg-gray-50 rounded-2xl border border-gray-100">
-                        <img src="{{ asset('storage/'.$service->image) }}" class="w-24 h-24 object-cover rounded-xl shadow-md border-2 border-white">
-                        <div>
-                            <h3 class="font-black text-gray-900 uppercase leading-tight">{{ $service->name }}</h3>
-                            <p class="text-[11px] text-gray-500 mt-2 font-medium leading-relaxed italic">{{ $service->description }}</p>
+                    <div class="flex flex-col sm:flex-row gap-4 p-5 bg-gray-50 rounded-3xl border border-gray-100 hover:shadow-md transition-shadow">
+                        {{-- Imagen del servicio --}}
+                        <img src="{{ asset('storage/'.$service->image) }}" class="w-24 h-24 object-cover rounded-2xl shadow-md border-2 border-white flex-shrink-0">
+                        
+                        <div class="flex flex-col justify-between flex-grow">
+                            <div>
+                                <h3 class="font-black text-gray-900 uppercase leading-tight tracking-tighter">{{ $service->name }}</h3>
+                                <p class="text-[11px] text-gray-500 mt-2 font-medium leading-relaxed italic line-clamp-3">
+                                    {{ $service->description }}
+                                </p>
+                            </div>
+
+                            {{-- Botón de Solicitud --}}
+                            <div class="mt-4">
+                                <a href="https://wa.me/584241106067?text={{ urlencode('¡Hola Imprefot! Me gustaría solicitar tu servicio de: ' . $service->name) }}" 
+                                target="_blank" 
+                                class="inline-flex items-center gap-2 bg-impre-blue text-white px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-cyan-700 transition-all active:scale-95 shadow-sm">
+                                    <i class="fab fa-whatsapp text-sm"></i>
+                                    Solicitar
+                                </a>
+                            </div>
                         </div>
                     </div>
                 @endforeach
