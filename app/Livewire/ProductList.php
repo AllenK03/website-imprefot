@@ -11,7 +11,7 @@ class ProductList extends Component
 {
     public $search = ''; // Para el filtro
     public $showModal = false; // Controla si se ve el resumen
-    public $selectedDescription = null; // Para ver la descripción
+    public $selectedProductId = null;
     public $showServicesModal = false;
 
     #[Layout('layouts.app')]
@@ -49,9 +49,9 @@ class ProductList extends Component
     public function toggleModal() { $this->showModal = !$this->showModal; }
     
     // Función para mostrar/ocultar descripción
-    public function showDescription($text) { 
-        $this->selectedDescription = ($this->selectedDescription == $text) ? null : $text; 
-    }
+    public function showDescription($productId) { 
+        $this->selectedProductId = ($this->selectedProductId == $productId) ? null : $productId; 
+    }    
 
     public function render()
     {
