@@ -29,6 +29,7 @@ class ProductList extends Component
                 'name' => $product->name,
                 'price' => $product->price,
                 'quantity' => 1,
+                'associatedModel' => $product,
             ]);
         } else {
             // Aquí podrías lanzar una alerta

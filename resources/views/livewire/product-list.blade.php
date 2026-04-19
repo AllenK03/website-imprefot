@@ -194,28 +194,26 @@
                                 <p class="font-black text-gray-800 text-sm uppercase">{{ $item->name }}</p>
                                 <p class="text-[10px] text-gray-400 font-bold mt-1 italic">${{ number_format($item->price, 2) }} UNITARIO</p>
                             </div>
+                            
                             <div class="flex flex-col items-end gap-1 ml-4">
                                 <div class="flex items-center gap-3">
-                                    {{-- Botón Menos --}}
                                     <button wire:click="decrement({{ $item->id }})" class="bg-white border-2 border-gray-100 h-10 w-10 rounded-full font-black text-gray-400 hover:text-gray-900 transition-colors cursor-pointer">-</button>
                                     
                                     <span class="font-black text-xl w-6 text-center">{{ $item->quantity }}</span>
                                     
-                                    {{-- Botón Más (se desactiva si llega al límite) --}}
+                                    {{-- Validación usando associatedModel --}}
                                     <button wire:click="increment({{ $item->id }})" 
-                                            {{ $item->quantity >= $item->product->stock ? 'disabled' : '' }}
+                                            {{ $item->quantity >= $item->associatedModel->stock ? 'disabled' : '' }}
                                             class="h-10 w-10 rounded-full font-black transition-colors border-2 
-                                            {{ $item->quantity >= $item->product->stock ? 'bg-gray-50 border-gray-50 text-gray-200 cursor-not-allowed' : 'bg-white border-gray-100 text-gray-400 hover:text-gray-900 cursor-pointer' }}">
+                                            {{ $item->quantity >= $item->associatedModel->stock ? 'bg-gray-100 border-gray-100 text-gray-200 cursor-not-allowed' : 'bg-white border-gray-100 text-gray-400 hover:text-gray-900 cursor-pointer' }}">
                                         +
                                     </button>
-
-                                    <button wire:click="removeItem({{ $item->id }})" class="ml-4 text-red-300 hover:text-red-500 text-xl cursor-pointer">
-                                        <i class="fas fa-trash-alt"></i>
-                                    </button>
+                                    
+                                    <button wire:click="removeItem({{ $item->id }})" class="ml-4 text-red-300 hover:text-red-500 text-xl cursor-pointer"><i class="fas fa-trash-alt"></i></button>
                                 </div>
 
-                                {{-- Leyenda de aviso --}}
-                                @if($item->quantity >= $item->product->stock)
+                                {{-- Mensaje de alerta --}}
+                                @if($item->quantity >= $item->associatedModel->stock)
                                     <span class="text-[9px] font-black text-impre-orange uppercase italic tracking-tighter animate-pulse">
                                         No hay más unidades
                                     </span>
