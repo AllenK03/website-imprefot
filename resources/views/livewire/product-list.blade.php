@@ -164,23 +164,27 @@
             </div>
             <div class="p-8 overflow-y-auto grid grid-cols-1 md:grid-cols-2 gap-8">
                 @foreach($services as $service)
-                    <div class="flex flex-col sm:flex-row gap-4 p-5 bg-gray-50 rounded-3xl border border-gray-100 hover:shadow-md transition-shadow">
-                        {{-- Imagen del servicio --}}
-                        <img src="{{ asset('storage/'.$service->image) }}" class="w-24 h-24 object-cover rounded-2xl shadow-md border-2 border-white flex-shrink-0">
+                    <div class="flex flex-col sm:flex-row items-center sm:items-start gap-6 p-6 bg-gray-50 rounded-[2.5rem] border border-gray-100 hover:shadow-md transition-shadow">
                         
-                        <div class="flex flex-col justify-between flex-grow">
+                        {{-- Imagen del servicio: Centrada en móvil --}}
+                        <img src="{{ asset('storage/'.$service->image) }}" 
+                            class="w-28 h-28 object-cover rounded-3xl shadow-md border-2 border-white flex-shrink-0">
+                        
+                        <div class="flex flex-col justify-between flex-grow text-center sm:text-left">
                             <div>
-                                <h3 class="font-black text-gray-900 uppercase leading-tight tracking-tighter">{{ $service->name }}</h3>
+                                <h3 class="font-black text-gray-900 uppercase leading-tight tracking-tighter text-base">
+                                    {{ $service->name }}
+                                </h3>
                                 <p class="text-[11px] text-gray-500 mt-2 font-medium leading-relaxed italic line-clamp-3">
                                     {{ $service->description }}
                                 </p>
                             </div>
 
-                            {{-- Botón de Solicitud --}}
-                            <div class="mt-4">
+                            {{-- Botón de Solicitud: Centrado en móvil --}}
+                            <div class="mt-5 flex justify-center sm:justify-start">
                                 <a href="https://wa.me/584241106067?text={{ urlencode('¡Hola Imprefot! Me gustaría solicitar tu servicio de: ' . $service->name) }}" 
                                 target="_blank" 
-                                class="inline-flex items-center justify-center gap-2 bg-[#25D366] text-white px-4 py-3 rounded-xl text-[11px] font-black uppercase tracking-tighter hover:bg-[#20ba5a] transition-all shadow-md active:scale-95 cursor-pointer group">
+                                class="inline-flex items-center justify-center gap-2 bg-[#25D366] text-white px-5 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-tighter hover:bg-[#20ba5a] transition-all shadow-md active:scale-95 cursor-pointer group">
                                     <i class="fab fa-whatsapp text-base group-hover:rotate-12 transition-transform"></i>
                                     <span>Solicitar Servicio</span>
                                 </a>
