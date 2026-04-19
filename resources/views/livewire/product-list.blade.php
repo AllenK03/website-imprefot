@@ -180,7 +180,7 @@
                             <div class="mt-5">
                                 <a href="https://wa.me/584241106067?text={{ urlencode('¡Hola Imprefot! Me gustaría solicitar tu servicio de: ' . $service->name) }}" 
                                 target="_blank" 
-                                class="w-full sm:w-auto inline-flex items-center justify-center gap-3 bg-[#25D366] text-white px-4 py-2 rounded-2xl text-sm font-black uppercase tracking-tighter hover:bg-[#20ba5a] hover:scale-[1.02] transition-all shadow-lg active:scale-95 cursor-pointer group">
+                                class="w-full sm:w-auto inline-flex items-center justify-center gap-3 bg-[#25D366] text-white px-4 py-4 rounded-2xl text-sm font-black uppercase tracking-tighter hover:bg-[#20ba5a] hover:scale-[1.02] transition-all shadow-lg active:scale-95 cursor-pointer group">
                                     <i class="fab fa-whatsapp text-xl group-hover:rotate-12 transition-transform"></i>
                                     <span>Solicitar Servicio</span>
                                 </a>
