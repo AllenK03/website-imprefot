@@ -83,13 +83,14 @@
                         <h3 class="font-black text-gray-800 text-lg leading-tight h-12 overflow-hidden uppercase tracking-tighter">{{ $product->name }}</h3>
                         <p class="text-impre-blue font-black text-3xl mt-2 italic">${{ number_format($product->price, 2) }}</p>
                         
-                        <button wire:click="showDescription('{{ addslashes($product->description) }}')" class="text-left text-[10px] font-black text-gray-400 mt-4 flex items-center gap-2 hover:text-impre-orange transition-colors uppercase tracking-widest cursor-pointer">
+                        <button wire:click="showDescription('{{ addslashes($product->description) }}')" 
+                                class="text-left text-[10px] font-black text-gray-400 mt-4 flex items-center gap-2 hover:text-impre-orange transition-colors uppercase tracking-widest cursor-pointer">
                             <i class="fas fa-plus-circle text-sm"></i> Detalles del producto
                         </button>
 
                         @if($selectedDescription == $product->description)
-                            <div class="mt-4 p-4 bg-gray-50 rounded-2xl text-xs text-gray-600 border border-gray-100 animate-fade-in font-medium">
-                                {{ $product->description }}
+                            <div class="mt-4 p-4 bg-gray-50 rounded-2xl text-xs text-gray-600 border border-gray-100 animate-fade-in font-medium whitespace-pre-line">
+                                {!! nl2br(e($product->description)) !!}
                             </div>
                         @endif
 
