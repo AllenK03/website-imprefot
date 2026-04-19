@@ -248,7 +248,7 @@
                 </div>
             </div>
             <div class="bg-gray-50 p-10">
-                <button wire:click="checkout" class="w-full bg-[#25D366] text-white py-6 rounded-[2rem] font-black text-xl hover:bg-green-600 transition-all flex items-center justify-center gap-4 shadow-xl active:scale-95 group cursor-pointer">
+                <button wire:click="checkout" class="w-full bg-[#25D366] text-white py-6 px-2 rounded-[2rem] font-black text-xl hover:bg-green-600 transition-all flex items-center justify-center gap-4 shadow-xl active:scale-95 group cursor-pointer">
                      <i class="fab fa-whatsapp text-3xl group-hover:scale-110 transition-transform"></i>
                      ENVIAR POR WHATSAPP
                 </button>
