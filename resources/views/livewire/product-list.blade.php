@@ -10,7 +10,7 @@
                     <img src="{{ asset('images/logo-imprefot.png') }}" alt="Imprefot" class="h-22 w-auto hidden sm:block">
                     <div class="flex flex-col">
                         <h1 class="text-3xl font-black italic tracking-tighter text-impre-blue leading-none">
-                            IMPREFOT Mamalo<span class="text-impre-orange">09</span>
+                            IMPREFOT MamaloLuis<span class="text-impre-orange">09</span>
                         </h1>
                         <span class="text-[9px] font-bold text-gray-400 uppercase tracking-[0.4em] mt-1 ml-1">Tienda en Línea</span>
                     </div>
