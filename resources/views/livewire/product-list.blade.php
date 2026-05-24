@@ -130,12 +130,44 @@
     {{-- FOOTER CON DIRECCIÓN ESPECÍFICA --}}
     <footer class="bg-gray-900 text-white py-12 px-6">
         <div class="max-w-7xl mx-auto flex flex-col items-center">
-            {{-- BLOQUE DE UBICACIÓN --}}
-            <div class="bg-gray-800 p-8 rounded-3xl border border-gray-700 max-w-3xl w-full text-center mb-10 shadow-inner">
-                <h5 class="text-impre-orange font-black mb-4 uppercase tracking-[0.3em] text-[10px]">Ubicación de la Tienda</h5>
-                <p class="text-gray-200 leading-relaxed italic text-base">
+            {{-- BLOQUE DE UBICACIÓN COMPACTO --}}
+            <div class="bg-gray-800 p-6 rounded-3xl border border-gray-700 max-w-xl w-full text-center mb-10 shadow-inner">
+                <h5 class="text-impre-orange font-black mb-3 uppercase tracking-[0.3em] text-[10px]">Ubicación de la Tienda</h5>
+                
+                <p class="text-gray-200 leading-relaxed italic text-sm mb-5">
                     Avenida Tosta García, con calle 8 Zamora, justo al frente de Repuestos Guárico, Charallave, Estado Miranda.
                 </p>
+
+                {{-- MAPA PEQUEÑO Y CLICKABLE --}}
+                <a href="https://www.google.com/maps/search/?api=1&query=10.239608,-66.859602" 
+                target="_blank" 
+                class="block w-full h-28 rounded-2xl overflow-hidden shadow-md border border-gray-700 relative group mb-5 cursor-pointer">
+                    
+                    {{-- Iframe del mapa --}}
+                    <iframe 
+                        class="w-full h-full filter grayscale invert contrast-125 opacity-70 group-hover:opacity-90 group-hover:filter-none transition-all duration-500 pointer-events-none"
+                        src="https://maps.google.com/maps?q=10.239608,-66.859602&z=16&output=embed" 
+                        allowfullscreen="" 
+                        loading="lazy">
+                    </iframe>
+
+                    {{-- Capa encima para invitar al click --}}
+                    <div class="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors flex items-center justify-center">
+                        <span class="bg-gray-900/80 text-white text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm">
+                            Ver en Google Maps
+                        </span>
+                    </div>
+                </a>
+
+                {{-- BOTÓN COMPACTO --}}
+                <div class="flex justify-center">
+                    <a href="https://www.google.com/maps/search/?api=1&query=10.239608,-66.859602" 
+                    target="_blank" 
+                    class="inline-flex items-center justify-center gap-2 bg-[#25D366] text-white px-5 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-tighter hover:bg-[#20ba5a] transition-all shadow-md active:scale-95 cursor-pointer group">
+                        <i class="fas fa-map-marker-alt text-base group-hover:animate-bounce"></i>
+                        <span>Abrir Dirección</span>
+                    </a>
+                </div>
             </div>
 
             {{-- CRÉDITOS Y DERECHOS UNIFICADOS --}}
