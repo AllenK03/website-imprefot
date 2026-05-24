@@ -137,6 +137,7 @@
                 <p class="text-gray-200 leading-relaxed italic text-sm mb-6">
                     Avenida Tosta García, con calle 8 Zamora, justo al frente de Repuestos Guárico, Charallave, Estado Miranda.
                 </p>
+                <br>
 
                 {{-- MAPA VISIBLE Y CLICKABLE (SIN FILTRO OSCURO) --}}
                 <a href="https://www.google.com/maps/search/?api=1&query=10.239608,-66.859602" 
