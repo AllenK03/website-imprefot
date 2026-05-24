@@ -317,7 +317,7 @@
                 {{-- Botón de cerrar (La X) forzado con coordenadas exactas --}}
                 <button wire:click="closeAnnouncement" 
                         type="button"
-                        class="absolute !top-4 !right-4 bg-black/70 text-white hover:bg-red-600 h-10 w-10 rounded-full flex items-center justify-center text-2xl font-light transition-colors cursor-pointer z-[320] shadow-xl border border-white/20">
+                        class="absolute !top-4 !left-4 bg-black/70 text-white hover:bg-red-600 h-10 w-10 rounded-full flex items-center justify-center text-2xl font-light transition-colors cursor-pointer z-[320] shadow-xl border border-white/20">
                     &times;
                 </button>
 
