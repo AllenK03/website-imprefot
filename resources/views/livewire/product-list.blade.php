@@ -302,23 +302,29 @@
     </div>
     @endif
 
-    {{-- MODAL DE ANUNCIO EMERGENTE --}}
+    {{-- MODAL DE ANUNCIO EMERGENTE BLINDADO --}}
     @if($showAnnouncement)
     <div class="fixed inset-0 z-[300] flex items-center justify-center p-4">
-        {{-- Fondo oscuro. Si el usuario hace click fuera de la imagen, también se cierra --}}
+        {{-- Fondo oscuro --}}
         <div wire:click="closeAnnouncement" class="fixed inset-0 bg-black/80 backdrop-blur-md cursor-pointer"></div>
         
-        {{-- Contenedor de la Imagen --}}
-        <div class="relative max-w-xl w-full bg-transparent overflow-hidden z-[310]">
+        {{-- Contenedor Relativo Seguro --}}
+        <div class="relative max-w-xl w-full z-[310] mx-auto flex flex-col items-center justify-center">
             
-            {{-- Botón de cerrar elegante (La X) --}}
-            <button wire:click="closeAnnouncement" class="absolute top-3 right-3 bg-black/60 text-white hover:bg-red-600 h-9 w-9 rounded-full flex items-center justify-center text-xl font-light transition-colors cursor-pointer z-[320] shadow-lg border border-white/10">
-                &times;
-            </button>
+            {{-- Bloque relativo exclusivo para la imagen y su botón de cierre --}}
+            <div class="relative w-full rounded-[2.5rem] border-4 border-white/5 shadow-2xl overflow-hidden bg-transparent">
+                
+                {{-- Botón de cerrar (La X) forzado con coordenadas exactas --}}
+                <button wire:click="closeAnnouncement" 
+                        type="button"
+                        class="absolute !top-4 !right-4 bg-black/70 text-white hover:bg-red-600 h-10 w-10 rounded-full flex items-center justify-center text-2xl font-light transition-colors cursor-pointer z-[320] shadow-xl border border-white/20">
+                    &times;
+                </button>
 
-            {{-- Contenedor de imagen con bordes redondeados y sombra fluida --}}
-            <div class="w-full h-auto max-h-[75vh] overflow-hidden rounded-[2.5rem] border-4 border-white/5 shadow-2xl">
-                <img src="{{ asset('storage/' . $announcementImage) }}" alt="Promoción Especial" class="w-full h-full object-contain mx-auto">
+                {{-- Imagen del Anuncio --}}
+                <img src="{{ asset('storage/' . $announcementImage) }}" 
+                    alt="Promoción Especial" 
+                    class="w-full h-auto max-h-[75vh] object-contain block mx-auto">
             </div>
         </div>
     </div>
