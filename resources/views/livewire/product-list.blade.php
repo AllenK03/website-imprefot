@@ -130,40 +130,40 @@
     {{-- FOOTER CON DIRECCIÓN ESPECÍFICA --}}
     <footer class="bg-gray-900 text-white py-12 px-6">
         <div class="max-w-7xl mx-auto flex flex-col items-center">
-            {{-- BLOQUE DE UBICACIÓN COMPACTO --}}
-            <div class="bg-gray-800 p-6 rounded-3xl border border-gray-700 max-w-xl w-full text-center mb-10 shadow-inner">
+            {{-- BLOQUE DE UBICACIÓN COMPACTO Y RESPONSIVO --}}
+            <div class="bg-gray-800 p-6 sm:p-8 rounded-3xl border border-gray-700 max-w-xl w-full text-center mb-10 shadow-inner">
                 <h5 class="text-impre-orange font-black mb-3 uppercase tracking-[0.3em] text-[10px]">Ubicación de la Tienda</h5>
                 
-                <p class="text-gray-200 leading-relaxed italic text-sm mb-5">
+                <p class="text-gray-200 leading-relaxed italic text-sm mb-6">
                     Avenida Tosta García, con calle 8 Zamora, justo al frente de Repuestos Guárico, Charallave, Estado Miranda.
                 </p>
 
-                {{-- MAPA PEQUEÑO Y CLICKABLE --}}
+                {{-- MAPA VISIBLE Y CLICKABLE (SIN FILTRO OSCURO) --}}
                 <a href="https://www.google.com/maps/search/?api=1&query=10.239608,-66.859602" 
                 target="_blank" 
-                class="block w-full h-28 rounded-2xl overflow-hidden shadow-md border border-gray-700 relative group mb-5 cursor-pointer">
+                class="block w-full h-28 rounded-2xl overflow-hidden shadow-md border border-gray-600 relative group cursor-pointer">
                     
-                    {{-- Iframe del mapa --}}
+                    {{-- Iframe del mapa: Siempre a color y con buena opacidad para móviles --}}
                     <iframe 
-                        class="w-full h-full filter grayscale invert contrast-125 opacity-70 group-hover:opacity-90 group-hover:filter-none transition-all duration-500 pointer-events-none"
+                        class="w-full h-full opacity-95 transition-opacity duration-300 pointer-events-none"
                         src="https://maps.google.com/maps?q=10.239608,-66.859602&z=16&output=embed" 
                         allowfullscreen="" 
                         loading="lazy">
                     </iframe>
 
-                    {{-- Capa encima para invitar al click --}}
-                    <div class="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors flex items-center justify-center">
-                        <span class="bg-gray-900/80 text-white text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm">
+                    {{-- Capa sutil encima --}}
+                    <div class="absolute inset-0 bg-black/5 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                        <span class="bg-gray-900/90 text-white text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm hidden sm:inline-block">
                             Ver en Google Maps
                         </span>
                     </div>
                 </a>
 
-                {{-- BOTÓN COMPACTO --}}
-                <div class="flex justify-center">
+                {{-- BOTÓN CON MARGIN TOP REFORZADO PARA EVITAR AMONTONAMIENTO --}}
+                <div class="mt-6 flex justify-center">
                     <a href="https://www.google.com/maps/search/?api=1&query=10.239608,-66.859602" 
                     target="_blank" 
-                    class="inline-flex items-center justify-center gap-2 bg-[#25D366] text-white px-5 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-tighter hover:bg-[#20ba5a] transition-all shadow-md active:scale-95 cursor-pointer group">
+                    class="inline-flex items-center justify-center gap-2 bg-[#25D366] text-white px-6 py-3 rounded-xl text-[11px] font-black uppercase tracking-tighter hover:bg-[#20ba5a] transition-all shadow-md active:scale-95 cursor-pointer group">
                         <i class="fas fa-map-marker-alt text-base group-hover:animate-bounce"></i>
                         <span>Abrir Dirección</span>
                     </a>
