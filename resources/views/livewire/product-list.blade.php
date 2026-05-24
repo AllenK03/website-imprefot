@@ -302,7 +302,7 @@
     </div>
     @endif
 
-    {{-- MODAL DE ANUNCIO EMERGENTE BLINDADO --}}
+    {{-- MODAL DE ANUNCIO EMERGENTE BLINDADO (SOLUCIÓN CSS NATIVO) --}}
     @if($showAnnouncement)
     <div class="fixed inset-0 z-[300] flex items-center justify-center p-4">
         {{-- Fondo oscuro --}}
@@ -314,10 +314,11 @@
             {{-- Bloque relativo exclusivo para la imagen y su botón de cierre --}}
             <div class="relative w-full rounded-[2.5rem] border-4 border-white/5 shadow-2xl overflow-hidden bg-transparent">
                 
-                {{-- Botón de cerrar (La X) forzado con coordenadas exactas --}}
+                {{-- Botón de cerrar (La X) blindado con style nativo --}}
                 <button wire:click="closeAnnouncement" 
                         type="button"
-                        class="absolute !top-4 !left-4 bg-black/70 text-white hover:bg-red-600 h-10 w-10 rounded-full flex items-center justify-center text-2xl font-light transition-colors cursor-pointer z-[320] shadow-xl border border-white/20">
+                        style="position: absolute !important; top: 16px !important; right: 16px !important;"
+                        class="bg-black/70 text-white hover:bg-red-600 h-10 w-10 rounded-full flex items-center justify-center text-2xl font-light transition-colors cursor-pointer z-[320] shadow-xl border border-white/20">
                     &times;
                 </button>
 
