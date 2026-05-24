@@ -3,6 +3,7 @@
 namespace App\Livewire;
 
 use App\Models\Product;
+use App\Models\Announcement;
 use Livewire\Component;
 use Livewire\Attributes\Layout;
 use Darryldecode\Cart\Facades\CartFacade as Cart;
@@ -13,6 +14,8 @@ class ProductList extends Component
     public $showModal = false; // Controla si se ve el resumen
     public $selectedProductId = null;
     public $showServicesModal = false;
+    public $showAnnouncement = false;
+    public $announcementImage = '';
 
     #[Layout('layouts.app')]
 
@@ -95,5 +98,21 @@ class ProductList extends Component
 
         // 4. Redirigir a WhatsApp
         return redirect()->away($url);
-}
+    }
+
+    public function mount()
+    {
+        // Buscamos si hay un anuncio activo en la BD
+        $announcement = Announcement::where('is_active', true)->latest()->first();
+        
+        if ($announcement) {
+            $this->announcementImage = $announcement->image_path;
+            $this->showAnnouncement = true;
+        }
+    }
+
+    public function closeAnnouncement()
+    {
+        $this->showAnnouncement = false;
+    }
 }

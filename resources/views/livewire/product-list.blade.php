@@ -138,7 +138,6 @@
                     Avenida Tosta García, con calle 8 Zamora, justo al frente de Repuestos Guárico, Charallave, Estado Miranda.
                 </p>
                 <br>
-
                 {{-- MAPA VISIBLE Y CLICKABLE (SIN FILTRO OSCURO) --}}
                 <a href="https://www.google.com/maps/search/?api=1&query=10.239608,-66.859602" 
                 target="_blank" 
@@ -300,6 +299,28 @@
             </div>
             <span class="font-black text-lg uppercase tracking-widest italic">Mi Pedido</span>
         </button>
+    </div>
+    @endif
+
+    {{-- MODAL DE ANUNCIO EMERGENTE --}}
+    @if($showAnnouncement)
+    <div class="fixed inset-0 z-[300] flex items-center justify-center p-4">
+        {{-- Fondo oscuro. Si el usuario hace click fuera de la imagen, también se cierra --}}
+        <div wire:click="closeAnnouncement" class="fixed inset-0 bg-black/80 backdrop-blur-md cursor-pointer"></div>
+        
+        {{-- Contenedor de la Imagen --}}
+        <div class="relative max-w-xl w-full bg-transparent overflow-hidden z-[310]">
+            
+            {{-- Botón de cerrar elegante (La X) --}}
+            <button wire:click="closeAnnouncement" class="absolute top-3 right-3 bg-black/60 text-white hover:bg-red-600 h-9 w-9 rounded-full flex items-center justify-center text-xl font-light transition-colors cursor-pointer z-[320] shadow-lg border border-white/10">
+                &times;
+            </button>
+
+            {{-- Contenedor de imagen con bordes redondeados y sombra fluida --}}
+            <div class="w-full h-auto max-h-[75vh] overflow-hidden rounded-[2.5rem] border-4 border-white/5 shadow-2xl">
+                <img src="{{ asset('storage/' . $announcementImage) }}" alt="Promoción Especial" class="w-full h-full object-contain mx-auto">
+            </div>
+        </div>
     </div>
     @endif
 
