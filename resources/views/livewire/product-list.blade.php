@@ -62,6 +62,23 @@
             </div>
         </div>
 
+        {{-- FILTRO DE RUBROS (Horizontal scrollable en móviles, centrado en desktop) --}}
+        <div class="mb-10 flex items-center gap-3 overflow-x-auto pb-4 max-w-4xl mx-auto justify-start md:justify-center scrollbar-none snap-x">
+            <button wire:click="selectCategory(null)" 
+                    class="snap-center flex-shrink-0 px-6 py-3 rounded-2xl font-black text-xs tracking-widest uppercase transition-all active:scale-95 border-2 cursor-pointer
+                    {{ is_null($selectedCategory) ? 'bg-impre-blue text-white border-impre-blue shadow-md' : 'bg-white text-gray-500 border-gray-200 hover:border-gray-400' }}">
+                Todos
+            </button>
+
+            @foreach($categories as $category)
+                <button wire:click="selectCategory({{ $category->id }})" 
+                        class="snap-center flex-shrink-0 px-6 py-3 rounded-2xl font-black text-xs tracking-widest uppercase transition-all active:scale-95 border-2 cursor-pointer
+                        {{ $selectedCategory == $category->id ? 'bg-impre-blue text-white border-impre-blue shadow-md' : 'bg-white text-gray-500 border-gray-200 hover:border-gray-400' }}">
+                    {{ $category->name }}
+                </button>
+            @endforeach
+        </div>
+
         {{-- GRID DE PRODUCTOS --}}
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
             @forelse($products as $product)

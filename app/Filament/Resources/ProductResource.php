@@ -9,6 +9,8 @@ use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Grid;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -44,6 +46,19 @@ class ProductResource extends Resource
                                 ->disabled() // Evitamos que lo editen por error
                                 ->dehydrated(), 
                         ]),
+
+                        Select::make('category_id')
+                            ->label('Rubro / Categoría')
+                            ->relationship('category', 'name') // Vincula con el modelo Category y muestra el 'name'
+                            ->searchable() // Permite buscar escribiendo si tienes muchos rubros
+                            ->preload() // Carga los rubros rápido en memoria para mejorar la fluidez
+                            ->required()
+                            ->createOptionForm([ // ¡EL TRUCO! Permite crear un rubro rápido desde aquí mismo
+                                TextInput::make('name')
+                                    ->label('Nombre del nuevo Rubro')
+                                    ->required()
+                                    ->unique('categories', 'name'),
+                            ]),
                     
                     \Filament\Forms\Components\Textarea::make('description')
                         ->label('Descripción')
@@ -107,6 +122,11 @@ class ProductResource extends Resource
                     ->numeric()
                     ->sortable()
                     ->color(fn (int $state): string => $state < 5 ? 'danger' : 'success'),
+
+                \Filament\Tables\Columns\TextColumn::make('category.name')
+                    ->label('Rubro')
+                    ->sortable() // Permite ordenar los productos por rubro
+                    ->searchable(),
 
                 // Un icono que indica si está activo o no
                 \Filament\Tables\Columns\IconColumn::make('is_active')

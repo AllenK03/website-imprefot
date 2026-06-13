@@ -4,6 +4,7 @@ namespace App\Livewire;
 
 use App\Models\Product;
 use App\Models\Announcement;
+use App\Models\Category;
 use Livewire\Component;
 use Livewire\Attributes\Layout;
 use Darryldecode\Cart\Facades\CartFacade as Cart;
@@ -16,12 +17,19 @@ class ProductList extends Component
     public $showServicesModal = false;
     public $showAnnouncement = false;
     public $announcementImage = '';
+    public $selectedCategory = null;
 
     #[Layout('layouts.app')]
+
+    public function selectCategory($categoryId = null)
+    {
+        $this->selectedCategory = $categoryId;
+    }
 
     public function addToCart($productId)
     {
         $product = Product::find($productId);
+        if (!$product) return;
         $cartItem = Cart::get($productId);
         $currentQtyInCart = $cartItem ? $cartItem->quantity : 0;
 
@@ -62,10 +70,14 @@ class ProductList extends Component
         // FILTRO POR NOMBRE
         $products = Product::where('is_active', true)
             ->where('name', 'like', '%' . $this->search . '%')
+            ->when($this->selectedCategory, function ($query) {
+                $query->where('category_id', $this->selectedCategory);
+            })
             ->get();
 
         return view('livewire.product-list', [
             'products' => $products,
+            'categories' => Category::has('products')->get(),
             'services' => \App\Models\Service::where('is_active', true)->get(),
             'cartItems' => Cart::getContent()->sortBy('id'),
             'cartTotal' => Cart::getTotal(),

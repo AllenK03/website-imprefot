@@ -6,7 +6,6 @@ use Illuminate\Database\Eloquent\Model;
 
 class Product extends Model
 {
-    // Esto permite que Filament pueda guardar estos datos
     protected $fillable = [
         'name', 
         'slug', 
@@ -14,6 +13,12 @@ class Product extends Model
         'price', 
         'stock', 
         'image', 
-        'is_active'
+        'is_active',
+        'category_id'
     ];
+
+    public function category()
+    {
+        return $this->belongsTo(Category::class);
+    }
 }
