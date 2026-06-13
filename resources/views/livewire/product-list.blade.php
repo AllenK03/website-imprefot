@@ -69,20 +69,22 @@
                 {{-- Botón de "Todos" --}}
                 <button wire:click="selectCategory(null)" 
                         type="button"
-                        class="px-6 py-3 rounded-2xl font-black text-xs tracking-widest uppercase transition-all active:scale-95 border-2 cursor-pointer inline-block"
-                        style="flex-shrink: 0;"
-                        {{ is_null($selectedCategory) ? 'style=background-color:#0e7490;color:white;border-color:#0e7490;' : '' }}>
-                    <span class="{{ is_null($selectedCategory) ? 'text-white' : 'text-gray-500' }}">Todos</span>
+                        class="px-6 py-3 rounded-2xl font-black text-xs tracking-widest uppercase transition-all active:scale-95 border-2 cursor-pointer inline-block flex-shrink-0
+                        {{ is_null($selectedCategory) 
+                            ? 'bg-impre-blue text-white border-impre-blue shadow-md' 
+                            : 'bg-white text-gray-500 border-gray-200 hover:border-gray-400' }}">
+                    Todos
                 </button>
 
                 {{-- Bucle de rubros dinámicos --}}
                 @foreach($categories as $category)
                     <button wire:click="selectCategory({{ $category->id }})" 
                             type="button"
-                            class="px-6 py-3 rounded-2xl font-black text-xs tracking-widest uppercase transition-all active:scale-95 border-2 cursor-pointer inline-block"
-                            style="flex-shrink: 0;"
-                            {{ $selectedCategory == $category->id ? 'style=background-color:#0e7490;color:white;border-color:#0e7490;' : '' }}>
-                        <span class="{{ $selectedCategory == $category->id ? 'text-white' : 'text-gray-500' }}">{{ $category->name }}</span>
+                            class="px-6 py-3 rounded-2xl font-black text-xs tracking-widest uppercase transition-all active:scale-95 border-2 cursor-pointer inline-block flex-shrink-0
+                            {{ $selectedCategory == $category->id 
+                                ? 'bg-impre-orange text-white border-impre-orange shadow-md' 
+                                : 'bg-white text-gray-500 border-gray-200 hover:border-gray-400' }}">
+                        {{ $category->name }}
                     </button>
                 @endforeach
                 
