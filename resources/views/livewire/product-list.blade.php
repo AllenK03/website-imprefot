@@ -63,20 +63,30 @@
         </div>
 
         {{-- FILTRO DE RUBROS (Horizontal scrollable en móviles, centrado en desktop) --}}
-        <div class="mb-10 flex items-center gap-3 overflow-x-auto pb-4 max-w-4xl mx-auto justify-start md:justify-center scrollbar-none snap-x">
-            <button wire:click="selectCategory(null)" 
-                    class="snap-center flex-shrink-0 px-6 py-3 rounded-2xl font-black text-xs tracking-widest uppercase transition-all active:scale-95 border-2 cursor-pointer
-                    {{ is_null($selectedCategory) ? 'bg-impre-blue text-white border-impre-blue shadow-md' : 'bg-white text-gray-500 border-gray-200 hover:border-gray-400' }}">
-                Todos
-            </button>
-
-            @foreach($categories as $category)
-                <button wire:click="selectCategory({{ $category->id }})" 
-                        class="snap-center flex-shrink-0 px-6 py-3 rounded-2xl font-black text-xs tracking-widest uppercase transition-all active:scale-95 border-2 cursor-pointer
-                        {{ $selectedCategory == $category->id ? 'bg-impre-blue text-white border-impre-blue shadow-md' : 'bg-white text-gray-500 border-gray-200 hover:border-gray-400' }}">
-                    {{ $category->name }}
+        <div class="mb-10 w-full overflow-x-auto pb-4 scrollbar-none" style="-webkit-overflow-scrolling: touch;">
+            <div class="flex gap-3 px-2 w-full justify-start md:justify-center" style="min-width: max-content;">
+                
+                {{-- Botón de "Todos" --}}
+                <button wire:click="selectCategory(null)" 
+                        type="button"
+                        class="px-6 py-3 rounded-2xl font-black text-xs tracking-widest uppercase transition-all active:scale-95 border-2 cursor-pointer inline-block"
+                        style="flex-shrink: 0;"
+                        {{ is_null($selectedCategory) ? 'style=background-color:#0e7490;color:white;border-color:#0e7490;' : '' }}>
+                    <span class="{{ is_null($selectedCategory) ? 'text-white' : 'text-gray-500' }}">Todos</span>
                 </button>
-            @endforeach
+
+                {{-- Bucle de rubros dinámicos --}}
+                @foreach($categories as $category)
+                    <button wire:click="selectCategory({{ $category->id }})" 
+                            type="button"
+                            class="px-6 py-3 rounded-2xl font-black text-xs tracking-widest uppercase transition-all active:scale-95 border-2 cursor-pointer inline-block"
+                            style="flex-shrink: 0;"
+                            {{ $selectedCategory == $category->id ? 'style=background-color:#0e7490;color:white;border-color:#0e7490;' : '' }}>
+                        <span class="{{ $selectedCategory == $category->id ? 'text-white' : 'text-gray-500' }}">{{ $category->name }}</span>
+                    </button>
+                @endforeach
+                
+            </div>
         </div>
 
         {{-- GRID DE PRODUCTOS --}}
