@@ -12,6 +12,7 @@
                         <h1 class="text-3xl font-black italic tracking-tighter text-impre-blue leading-none">
                             IMPREFOT<span class="text-impre-orange">09</span>
                         </h1>
+                        <span class="text-[10px] font-black text-gray-500 uppercase tracking-wider mt-1 ml-1">RIF: J-297250042</span>
                         <span class="text-[9px] font-bold text-gray-400 uppercase tracking-[0.4em] mt-1 ml-1">Tienda en Línea</span>
                     </div>
                 </div>
