@@ -3,19 +3,23 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\ProductResource\Pages;
-use App\Filament\Resources\ProductResource\RelationManagers;
+use App\Models\InventoryMovement;
 use App\Models\Product;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Filament\Forms;
-use Filament\Forms\Form;
-use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Grid;
+use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Actions\Action;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class ProductResource extends Resource
 {
@@ -24,77 +28,81 @@ class ProductResource extends Resource
     protected static ?string $navigationLabel = 'Productos';
     protected static ?string $modelLabel = 'Producto';
     protected static ?string $pluralModelLabel = 'Productos';
+    protected static ?string $navigationGroup = 'Gestión de Inventario';
+    protected static ?int $navigationSort = 0;
 
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
                 Section::make('Información General')
-                ->description('Detalles principales del producto')
-                ->schema([
-                    Grid::make(2) // Divide en 2 columnas
-                        ->schema([
-                            \Filament\Forms\Components\TextInput::make('name')
-                                ->label('Nombre')
-                                ->required()
-                                ->live(onBlur: true)
-                                ->afterStateUpdated(fn ($state, callable $set) => $set('slug', \Illuminate\Support\Str::slug($state))),
+                    ->description('Detalles principales del producto')
+                    ->schema([
+                        Grid::make(2)
+                            ->schema([
+                                TextInput::make('name')
+                                    ->label('Nombre')
+                                    ->required()
+                                    ->live(onBlur: true)
+                                    ->afterStateUpdated(fn ($state, callable $set) => $set('slug', Str::slug($state))),
 
-                            \Filament\Forms\Components\TextInput::make('slug')
-                                ->label('Enlace (URL)')
-                                ->required()
-                                ->disabled() // Evitamos que lo editen por error
-                                ->dehydrated(), 
-                        ]),
+                                TextInput::make('slug')
+                                    ->label('Enlace (URL)')
+                                    ->required()
+                                    ->disabled()
+                                    ->dehydrated(),
+                            ]),
 
                         Select::make('category_id')
                             ->label('Rubro / Categoría')
-                            ->relationship('category', 'name') // Vincula con el modelo Category y muestra el 'name'
-                            ->searchable() // Permite buscar escribiendo si tienes muchos rubros
-                            ->preload() // Carga los rubros rápido en memoria para mejorar la fluidez
+                            ->relationship('category', 'name')
+                            ->searchable()
+                            ->preload()
                             ->required()
-                            ->createOptionForm([ // ¡EL TRUCO! Permite crear un rubro rápido desde aquí mismo
+                            ->createOptionForm([
                                 TextInput::make('name')
                                     ->label('Nombre del nuevo Rubro')
                                     ->required()
                                     ->unique('categories', 'name'),
                             ]),
-                    
-                    \Filament\Forms\Components\Textarea::make('description')
-                        ->label('Descripción')
-                        ->columnSpanFull(),
-                ]),
 
-            Section::make('Inventario y Precio')
-                ->schema([
-                    Grid::make(3) // Divide en 3 columnas
-                        ->schema([
-                            \Filament\Forms\Components\TextInput::make('price')
-                                ->label('Precio')
-                                ->numeric()
-                                ->prefix('$')
-                                ->required(),
+                        Forms\Components\Textarea::make('description')
+                            ->label('Descripción')
+                            ->columnSpanFull(),
+                    ]),
 
-                            \Filament\Forms\Components\TextInput::make('stock')
-                                ->label('Existencia')
-                                ->numeric()
-                                ->required(),
+                Section::make('Precio e Inventario')
+                    ->schema([
+                        Grid::make(3)
+                            ->schema([
+                                TextInput::make('price')
+                                    ->label('Precio')
+                                    ->numeric()
+                                    ->prefix('$')
+                                    ->required(),
 
-                            \Filament\Forms\Components\Toggle::make('is_active')
-                                ->label('¿Publicado?')
-                                ->inline(false)
-                                ->default(true),
-                        ]),
-                ]),
+                                TextInput::make('stock')
+                                    ->label('Stock Inicial')
+                                    ->numeric()
+                                    ->default(0)
+                                    ->required()
+                                    ->hidden(fn (string $operation): bool => $operation === 'edit'),
 
-            Section::make('Multimedia')
-                ->schema([
-                    \Filament\Forms\Components\FileUpload::make('image')
-                        ->label('Imagen del Producto')
-                        ->image()
-                        ->directory('products')
-                        ->required(),
-                ]),
+                                Forms\Components\Toggle::make('is_active')
+                                    ->label('¿Publicado?')
+                                    ->inline(false)
+                                    ->default(true),
+                            ]),
+                    ]),
+
+                Section::make('Multimedia')
+                    ->schema([
+                        Forms\Components\FileUpload::make('image')
+                            ->label('Imagen del Producto')
+                            ->image()
+                            ->directory('products')
+                            ->required(),
+                    ]),
             ]);
     }
 
@@ -102,45 +110,107 @@ class ProductResource extends Resource
     {
         return $table
             ->columns([
-                \Filament\Tables\Columns\ImageColumn::make('image')
+                Tables\Columns\ImageColumn::make('image')
                     ->label('Imagen'),
 
-                \Filament\Tables\Columns\TextColumn::make('name')
+                Tables\Columns\TextColumn::make('name')
                     ->label('Nombre')
                     ->searchable()
                     ->sortable(),
 
-                // Precio formateado. Usamos 'money' pero puedes usar 'numeric' si prefieres algo simple
-                \Filament\Tables\Columns\TextColumn::make('price')
+                Tables\Columns\TextColumn::make('price')
                     ->label('Precio')
-                    ->money('USD') // Cambia a la moneda que necesites
+                    ->money('USD')
                     ->sortable(),
 
-                // Existencia con color dinámico (Rojo si hay poco, Verde si hay suficiente)
-                \Filament\Tables\Columns\TextColumn::make('stock')
+                Tables\Columns\TextColumn::make('stock')
                     ->label('Existencia')
                     ->numeric()
                     ->sortable()
                     ->color(fn (int $state): string => $state < 5 ? 'danger' : 'success'),
 
-                \Filament\Tables\Columns\TextColumn::make('category.name')
+                Tables\Columns\TextColumn::make('category.name')
                     ->label('Rubro')
-                    ->sortable() // Permite ordenar los productos por rubro
+                    ->sortable()
                     ->searchable(),
 
-                // Un icono que indica si está activo o no
-                \Filament\Tables\Columns\IconColumn::make('is_active')
+                Tables\Columns\IconColumn::make('is_active')
                     ->label('Publicado')
                     ->boolean(),
             ])
             ->filters([
-                \Filament\Tables\Filters\TernaryFilter::make('is_active')
+                Tables\Filters\TernaryFilter::make('is_active')
                     ->label('Estado de publicación')
                     ->placeholder('Todos')
                     ->trueLabel('Solo Publicados')
                     ->falseLabel('Ocultos'),
             ])
+            ->headerActions([
+                Action::make('downloadPdf')
+                    ->label('Exportar PDF')
+                    ->icon('heroicon-o-document-arrow-down')
+                    ->color('danger')
+                    ->action(function () {
+                        $products = Product::with('category')->get();
+
+                        $pdf = Pdf::loadView('pdf.inventory', [
+                            'products'    => $products,
+                            'generatedAt' => now()->format('d/m/Y h:i A'),
+                        ]);
+
+                        return response()->streamDownload(
+                            fn () => print($pdf->output()),
+                            'inventario-actual-' . now()->format('Y-m-d') . '.pdf'
+                        );
+                    }),
+            ])
             ->actions([
+                Action::make('adjustStock')
+                    ->label('Ajustar Stock')
+                    ->icon('heroicon-o-adjustments-horizontal')
+                    ->color('warning')
+                    ->form([
+                        TextInput::make('current_stock')
+                            ->label('Stock Actual en Sistema')
+                            ->default(fn ($record) => $record->stock)
+                            ->disabled(),
+
+                        TextInput::make('new_stock')
+                            ->label('Nuevo Stock Real (Conteo Físico)')
+                            ->numeric()
+                            ->required()
+                            ->minValue(0),
+
+                        Textarea::make('reason')
+                            ->label('Motivo del Ajuste Obligatorio')
+                            ->placeholder('Ej: Pérdida por empaque dañado, conteo físico de fin de mes...')
+                            ->required(),
+                    ])
+                    ->action(function ($record, array $data): void {
+                        $difference = $data['new_stock'] - $record->stock;
+
+                        if ($difference === 0) {
+                            return;
+                        }
+
+                        DB::transaction(function () use ($record, $data, $difference) {
+                            $movement = InventoryMovement::create([
+                                'type'         => 'ajuste_manual',
+                                'user_id'      => Auth::id(),
+                                'reason'       => $data['reason'],
+                                'total_amount' => 0,
+                            ]);
+
+                            $movement->items()->create([
+                                'product_id' => $record->id,
+                                'quantity'   => $difference,
+                                'price'      => $record->price,
+                            ]);
+
+                            $record->update(['stock' => $data['new_stock']]);
+                        });
+                    }),
+
                 Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([
@@ -152,17 +222,15 @@ class ProductResource extends Resource
 
     public static function getRelations(): array
     {
-        return [
-            //
-        ];
+        return [];
     }
 
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListProducts::route('/'),
+            'index'  => Pages\ListProducts::route('/'),
             'create' => Pages\CreateProduct::route('/create'),
-            'edit' => Pages\EditProduct::route('/{record}/edit'),
+            'edit'   => Pages\EditProduct::route('/{record}/edit'),
         ];
     }
 }
