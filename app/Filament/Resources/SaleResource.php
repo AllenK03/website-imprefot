@@ -198,7 +198,7 @@ class SaleResource extends Resource
         $message = "Muchas gracias por su compra Sr(a) *{$client->name}*.\n\n"
             . "La lista de sus productos es:\n\n"
             . $itemsList . "\n"
-            . "*Monto Total:* *\${$totalFormatted}*\n\n"
+            . "💰 *Monto Total:* *\${$totalFormatted}*\n\n"
             . "Le invitamos a visitar nuestra tienda online para que pueda hacer sus compras y solicitar nuestros servicios desde la comodidad de su hogar:\n"
             . "imprefot.com";
 
