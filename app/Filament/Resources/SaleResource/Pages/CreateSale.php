@@ -13,16 +13,16 @@ class CreateSale extends CreateRecord
     {
         $record = $this->record;
 
-        // Abrir WhatsApp en una NUEVA pestaña si el cliente tiene teléfono
         if ($record->client?->phone) {
             $url = SaleResource::getWhatsAppUrl($record);
-            $this->js("window.open('{$url}', '_blank')");
+
+            // Cambiamos '_blank' por un nombre de ventana fijo ('whatsapp')
+            $this->js("window.open('{$url}', 'whatsapp')");
         }
     }
 
     protected function getRedirectUrl(): string
     {
-        // Mantener el sistema abierto en el listado de ventas
         return $this->getResource()::getUrl('index');
     }
 }

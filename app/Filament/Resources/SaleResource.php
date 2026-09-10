@@ -156,11 +156,10 @@ class SaleResource extends Resource
                     ->color('success')
                     ->visible(fn (InventoryMovement $record): bool => !empty($record->client?->phone))
                     ->url(
-                        fn (InventoryMovement $record): string => static::getWhatsAppUrl($record),
-                        shouldOpenInNewTab: true
+                        fn (InventoryMovement $record): string => static::getWhatsAppUrl($record)
                     )
                     ->extraAttributes([
-                        'target' => '_blank',
+                        'target' => 'whatsapp', // <-- Nombre fijo en lugar de '_blank'
                         'rel' => 'noopener noreferrer',
                     ]),
             ])
