@@ -125,9 +125,6 @@ class SaleResource extends Resource
             ]);
     }
 
-    /**
-     * Reusable total calculation function for repeater items
-     */
     protected static function updateTotalAmount(Forms\Get $get, Forms\Set $set): void
     {
         $items = $get('items') ?? [];
@@ -153,8 +150,63 @@ class SaleResource extends Resource
             ])
             ->actions([
                 Tables\Actions\ViewAction::make(),
+                Tables\Actions\Action::make('whatsapp')
+                    ->label('WhatsApp')
+                    ->icon('heroicon-o-chat-bubble-left-right')
+                    ->color('success')
+                    ->visible(fn (InventoryMovement $record): bool => !empty($record->client?->phone))
+                    ->url(
+                        fn (InventoryMovement $record): string => static::getWhatsAppUrl($record),
+                        shouldOpenInNewTab: true
+                    )
+                    ->extraAttributes([
+                        'target' => '_blank',
+                        'rel' => 'noopener noreferrer',
+                    ]),
             ])
             ->bulkActions([]);
+    }
+
+    /**
+     * Genera la URL de WhatsApp con la nota de entrega formateada
+     */
+    public static function getWhatsAppUrl(InventoryMovement $record): string
+    {
+        $client = $record->client;
+
+        if (!$client || empty($client->phone)) {
+            return '#';
+        }
+
+        // Normalizar número telefónico
+        $phone = preg_replace('/[^0-9]/', '', $client->phone);
+        if (str_starts_with($phone, '0')) {
+            $phone = '58' . substr($phone, 1);
+        }
+
+        // Cargar ítems y productos asociados
+        $record->loadMissing('items.product');
+
+        $itemsList = "";
+        foreach ($record->items as $item) {
+            $productName = $item->product->name ?? 'Producto';
+            $qty = $item->quantity;
+            $subtotal = number_format($item->price * $item->quantity, 2);
+            $itemsList .= "• {$productName} x{$qty} — *\${$subtotal}*\n";
+        }
+
+        $totalFormatted = number_format($record->total_amount, 2);
+
+        // Construcción del mensaje
+        $message = "Muchas gracias por su compra Sr(a) *{$client->name}*.\n\n"
+            . "La lista de sus productos es:\n\n"
+            . $itemsList . "\n"
+            . "💰 *Monto Total:* *\${$totalFormatted}*\n\n"
+            . "Le invitamos a visitar nuestra tienda online para que pueda hacer sus compras y solicitar nuestros servicios desde la comodidad de su hogar:\n"
+            . "imprefot.com";
+
+        // Apuntar directamente a web.whatsapp.com para evitar la pantalla intermedia
+        return "https://web.whatsapp.com/send?phone={$phone}&text=" . urlencode($message);
     }
 
     public static function getPages(): array
