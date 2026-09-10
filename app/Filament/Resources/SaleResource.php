@@ -156,12 +156,10 @@ class SaleResource extends Resource
                     ->color('success')
                     ->visible(fn (InventoryMovement $record): bool => !empty($record->client?->phone))
                     ->url(
-                        fn (InventoryMovement $record): string => static::getWhatsAppUrl($record)
+                        fn (InventoryMovement $record): string => static::getWhatsAppUrl($record),
+                        shouldOpenInNewTab: true // <-- Le indica a Filament abrir en nueva pestaña
                     )
-                    ->extraAttributes([
-                        'target' => 'whatsapp', // <-- Nombre fijo en lugar de '_blank'
-                        'rel' => 'noopener noreferrer',
-                    ]),
+                    ->openUrlInNewTab(), // <-- Forzar apertura en pestaña nueva
             ])
             ->bulkActions([]);
     }
@@ -205,7 +203,7 @@ class SaleResource extends Resource
             . "imprefot.com";
 
         // Apuntar directamente a web.whatsapp.com para evitar la pantalla intermedia
-        return "https://web.whatsapp.com/send?phone={$phone}&text=" . urlencode($message);
+        return "https://wa.me/{$phone}?text=" . urlencode($message);
     }
 
     public static function getPages(): array
