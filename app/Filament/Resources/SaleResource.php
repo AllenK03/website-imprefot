@@ -194,15 +194,14 @@ class SaleResource extends Resource
 
         $totalFormatted = number_format($record->total_amount, 2);
 
-        // Construcción del mensaje
+        // Construcción del mensaje con el saquito directo
         $message = "Muchas gracias por su compra Sr(a) *{$client->name}*.\n\n"
             . "La lista de sus productos es:\n\n"
             . $itemsList . "\n"
-            . "💰 *Monto Total:* *\${$totalFormatted}*\n\n"
+            . "*Monto Total:* *\${$totalFormatted}*\n\n"
             . "Le invitamos a visitar nuestra tienda online para que pueda hacer sus compras y solicitar nuestros servicios desde la comodidad de su hogar:\n"
             . "imprefot.com";
 
-        // Apuntar directamente a web.whatsapp.com para evitar la pantalla intermedia
         return "https://wa.me/{$phone}?text=" . urlencode($message);
     }
 
