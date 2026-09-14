@@ -145,8 +145,62 @@ class SaleResource extends Resource
                 Tables\Columns\TextColumn::make('client.name')->label('Cliente')->searchable(),
                 Tables\Columns\TextColumn::make('client.cedula')->label('RIF / Cédula')->searchable(),
                 Tables\Columns\TextColumn::make('reason')->label('Observaciones')->limit(30),
-                Tables\Columns\TextColumn::make('total_amount')->label('Total')->money('USD')->sortable(),
+                Tables\Columns\TextColumn::make('total_amount')
+                    ->label('Total')
+                    ->money('USD')
+                    ->sortable()
+                    // Sumatoria global o filtrada de la columna al pie de la tabla
+                    ->summarize(
+                        Tables\Columns\Summarizers\Sum::make()
+                            ->label('Total General')
+                            ->money('USD')
+                    ),
                 Tables\Columns\TextColumn::make('created_at')->label('Fecha')->dateTime('d/m/Y h:i A')->sortable(),
+            ])
+            ->filters([
+                // 1. Filtro por Rango de Fechas (Desde - Hasta)
+                Tables\Filters\Filter::make('created_at')
+                    ->form([
+                        Forms\Components\DatePicker::make('created_from')
+                            ->label('Desde')
+                            ->placeholder('Fecha inicio'),
+                        Forms\Components\DatePicker::make('created_until')
+                            ->label('Hasta')
+                            ->placeholder('Fecha fin'),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when(
+                                $data['created_from'],
+                                fn (Builder $query, $date): Builder => $query->whereDate('created_at', '>=', $date),
+                            )
+                            ->when(
+                                $data['created_until'],
+                                fn (Builder $query, $date): Builder => $query->whereDate('created_at', '<=', $date),
+                            );
+                    }),
+
+                // 2. Filtro por Cliente específico
+                Tables\Filters\SelectFilter::make('client_id')
+                    ->label('Cliente')
+                    ->relationship('client', 'name')
+                    ->searchable()
+                    ->preload(),
+
+                // 3. Filtro por Ventas de Alto Valor / Clientes que más gastan
+                Tables\Filters\Filter::make('high_value_sales')
+                    ->form([
+                        Forms\Components\TextInput::make('min_amount')
+                            ->label('Monto mínimo de venta ($)')
+                            ->numeric()
+                            ->placeholder('Ej: 50'),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query->when(
+                            $data['min_amount'],
+                            fn (Builder $query, $amount): Builder => $query->where('total_amount', '>=', $amount),
+                        );
+                    }),
             ])
             ->actions([
                 Tables\Actions\ViewAction::make(),
@@ -157,9 +211,9 @@ class SaleResource extends Resource
                     ->visible(fn (InventoryMovement $record): bool => !empty($record->client?->phone))
                     ->url(
                         fn (InventoryMovement $record): string => static::getWhatsAppUrl($record),
-                        shouldOpenInNewTab: true // <-- Le indica a Filament abrir en nueva pestaña
+                        shouldOpenInNewTab: true
                     )
-                    ->openUrlInNewTab(), // <-- Forzar apertura en pestaña nueva
+                    ->openUrlInNewTab(),
             ])
             ->bulkActions([]);
     }
@@ -194,7 +248,7 @@ class SaleResource extends Resource
 
         $totalFormatted = number_format($record->total_amount, 2);
 
-        // Construcción del mensaje con el saquito directo
+        // Construcción del mensaje sin emojis propensos a errores de encoding
         $message = "Muchas gracias por su compra Sr(a) *{$client->name}*.\n\n"
             . "La lista de sus productos es:\n\n"
             . $itemsList . "\n"
