@@ -6,6 +6,7 @@ use App\Filament\Resources\SaleResource\Pages;
 use App\Models\Client;
 use App\Models\InventoryMovement;
 use App\Models\Product;
+use App\Models\Service;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -54,18 +55,42 @@ class SaleResource extends Resource
                             ->dehydrateStateUsing(fn ($state) => blank($state) ? 'Sin observaciones' : $state),
                     ])->columns(2),
 
-                Forms\Components\Section::make('Detalle de Productos')
+                Forms\Components\Section::make('Detalle de la Venta')
                     ->schema([
                         Forms\Components\Repeater::make('items')
                             ->relationship()
-                            ->addActionLabel('Agregar otro Producto')
+                            ->addActionLabel('Agregar ítem (Producto o Servicio)')
                             ->schema([
+                                // Selector Tipo de Ítem
+                                Forms\Components\Select::make('item_type')
+                                    ->label('Tipo')
+                                    ->options([
+                                        'product' => 'Producto',
+                                        'service' => 'Servicio',
+                                    ])
+                                    ->default('product')
+                                    ->required()
+                                    ->live()
+                                    ->dehydrated(false)
+                                    ->afterStateUpdated(function (Forms\Set $set) {
+                                        $set('product_id', null);
+                                        $set('service_id', null);
+                                        $set('price', 0);
+                                    })
+                                    ->afterStateHydrated(function (Forms\Components\Select $component, $record) {
+                                        if ($record) {
+                                            $component->state($record->service_id ? 'service' : 'product');
+                                        }
+                                    }),
+
+                                // Select Producto (visible solo si Tipo == product)
                                 Forms\Components\Select::make('product_id')
-                                    ->label('Producto / Repuesto')
+                                    ->label('Producto')
                                     ->options(Product::pluck('name', 'id'))
                                     ->searchable()
-                                    ->required()
-                                    ->reactive()
+                                    ->required(fn (Forms\Get $get) => $get('item_type') === 'product')
+                                    ->visible(fn (Forms\Get $get) => $get('item_type') === 'product')
+                                    ->live()
                                     ->afterStateUpdated(function ($state, Forms\Set $set, Forms\Get $get) {
                                         $product = Product::find($state);
                                         if ($product) {
@@ -74,12 +99,24 @@ class SaleResource extends Resource
                                         static::updateTotalAmount($get, $set);
                                     }),
 
+                                // Select Servicio (visible solo si Tipo == service)
+                                Forms\Components\Select::make('service_id')
+                                    ->label('Servicio')
+                                    ->options(Service::where('is_active', true)->pluck('name', 'id'))
+                                    ->searchable()
+                                    ->required(fn (Forms\Get $get) => $get('item_type') === 'service')
+                                    ->visible(fn (Forms\Get $get) => $get('item_type') === 'service')
+                                    ->live(),
+
                                 Forms\Components\TextInput::make('quantity')
                                     ->label('Cantidad')
                                     ->numeric()
                                     ->default(1)
                                     ->minValue(1)
                                     ->maxValue(function (Forms\Get $get) {
+                                        if ($get('item_type') === 'service') {
+                                            return null; // Sin límite de stock para servicios
+                                        }
                                         $productId = $get('product_id');
                                         if (! $productId) {
                                             return 1;
@@ -88,6 +125,9 @@ class SaleResource extends Resource
                                         return $product ? $product->stock : 1;
                                     })
                                     ->helperText(function (Forms\Get $get) {
+                                        if ($get('item_type') === 'service') {
+                                            return 'Servicio (no descuenta stock)';
+                                        }
                                         $productId = $get('product_id');
                                         if (! $productId) {
                                             return null;
@@ -110,7 +150,7 @@ class SaleResource extends Resource
                                     ->live(onBlur: true)
                                     ->afterStateUpdated(fn (Forms\Get $get, Forms\Set $set) => static::updateTotalAmount($get, $set)),
                             ])
-                            ->columns(3)
+                            ->columns(4)
                             ->minItems(1)
                             ->live()
                             ->afterStateUpdated(fn (Forms\Get $get, Forms\Set $set) => static::updateTotalAmount($get, $set)),
@@ -149,7 +189,6 @@ class SaleResource extends Resource
                     ->label('Total')
                     ->money('USD')
                     ->sortable()
-                    // Sumatoria global o filtrada de la columna al pie de la tabla
                     ->summarize(
                         Tables\Columns\Summarizers\Sum::make()
                             ->label('Total General')
@@ -158,49 +197,22 @@ class SaleResource extends Resource
                 Tables\Columns\TextColumn::make('created_at')->label('Fecha')->dateTime('d/m/Y h:i A')->sortable(),
             ])
             ->filters([
-                // 1. Filtro por Rango de Fechas (Desde - Hasta)
                 Tables\Filters\Filter::make('created_at')
                     ->form([
-                        Forms\Components\DatePicker::make('created_from')
-                            ->label('Desde')
-                            ->placeholder('Fecha inicio'),
-                        Forms\Components\DatePicker::make('created_until')
-                            ->label('Hasta')
-                            ->placeholder('Fecha fin'),
+                        Forms\Components\DatePicker::make('created_from')->label('Desde'),
+                        Forms\Components\DatePicker::make('created_until')->label('Hasta'),
                     ])
                     ->query(function (Builder $query, array $data): Builder {
                         return $query
-                            ->when(
-                                $data['created_from'],
-                                fn (Builder $query, $date): Builder => $query->whereDate('created_at', '>=', $date),
-                            )
-                            ->when(
-                                $data['created_until'],
-                                fn (Builder $query, $date): Builder => $query->whereDate('created_at', '<=', $date),
-                            );
+                            ->when($data['created_from'], fn (Builder $query, $date): Builder => $query->whereDate('created_at', '>=', $date))
+                            ->when($data['created_until'], fn (Builder $query, $date): Builder => $query->whereDate('created_at', '<=', $date));
                     }),
 
-                // 2. Filtro por Cliente específico
                 Tables\Filters\SelectFilter::make('client_id')
                     ->label('Cliente')
                     ->relationship('client', 'name')
                     ->searchable()
                     ->preload(),
-
-                // 3. Filtro por Ventas de Alto Valor / Clientes que más gastan
-                Tables\Filters\Filter::make('high_value_sales')
-                    ->form([
-                        Forms\Components\TextInput::make('min_amount')
-                            ->label('Monto mínimo de venta ($)')
-                            ->numeric()
-                            ->placeholder('Ej: 50'),
-                    ])
-                    ->query(function (Builder $query, array $data): Builder {
-                        return $query->when(
-                            $data['min_amount'],
-                            fn (Builder $query, $amount): Builder => $query->where('total_amount', '>=', $amount),
-                        );
-                    }),
             ])
             ->actions([
                 Tables\Actions\ViewAction::make(),
@@ -218,9 +230,6 @@ class SaleResource extends Resource
             ->bulkActions([]);
     }
 
-    /**
-     * Genera la URL de WhatsApp con la nota de entrega formateada
-     */
     public static function getWhatsAppUrl(InventoryMovement $record): string
     {
         $client = $record->client;
@@ -229,31 +238,28 @@ class SaleResource extends Resource
             return '#';
         }
 
-        // Normalizar número telefónico
         $phone = preg_replace('/[^0-9]/', '', $client->phone);
         if (str_starts_with($phone, '0')) {
             $phone = '58' . substr($phone, 1);
         }
 
-        // Cargar ítems y productos asociados
-        $record->loadMissing('items.product');
+        $record->loadMissing(['items.product', 'items.service']);
 
         $itemsList = "";
         foreach ($record->items as $item) {
-            $productName = $item->product->name ?? 'Producto';
+            $name = $item->product?->name ?? $item->service?->name ?? 'Detalle';
             $qty = $item->quantity;
             $subtotal = number_format($item->price * $item->quantity, 2);
-            $itemsList .= "• {$productName} x{$qty} — *\${$subtotal}*\n";
+            $itemsList .= "• {$name} x{$qty} — *\${$subtotal}*\n";
         }
 
         $totalFormatted = number_format($record->total_amount, 2);
 
-        // Construcción del mensaje sin emojis propensos a errores de encoding
         $message = "Muchas gracias por su compra Sr(a) *{$client->name}*.\n\n"
-            . "La lista de sus productos es:\n\n"
+            . "El detalle de su consumo es:\n\n"
             . $itemsList . "\n"
             . "*Monto Total:* *\${$totalFormatted}*\n\n"
-            . "Le invitamos a visitar nuestra tienda online para que pueda hacer sus compras y solicitar nuestros servicios desde la comodidad de su hogar:\n"
+            . "Le invitamos a visitar nuestra tienda online:\n"
             . "imprefot.com";
 
         return "https://wa.me/{$phone}?text=" . urlencode($message);

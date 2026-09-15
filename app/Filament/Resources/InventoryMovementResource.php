@@ -46,7 +46,7 @@ class InventoryMovementResource extends Resource
                             ->label('Tipo de Movimiento')
                             ->formatStateUsing(fn (?string $state): string => match ($state) {
                                 'abastecimiento' => 'Entrada (Abastecimiento)',
-                                'venta'          => 'Salida (Venta)',
+                                'venta'          => 'Salida / Comercial (Venta)',
                                 'ajuste_manual'  => 'Ajuste Manual',
                                 default          => $state ?? '-',
                             })
@@ -80,16 +80,22 @@ class InventoryMovementResource extends Resource
                             ->columnSpanFull(),
                     ])->columns(3),
 
-                Forms\Components\Section::make('Productos Involucrados')
-                    ->description('Detalle de ítems, cantidades y precios registrados en este movimiento')
+                Forms\Components\Section::make('Ítems Involucrados (Productos y Servicios)')
+                    ->description('Detalle de productos vendidos o servicios prestados en esta transacción')
                     ->schema([
                         Forms\Components\Repeater::make('items')
                             ->relationship('items')
                             ->label('')
                             ->schema([
-                                Forms\Components\Select::make('product_id')
-                                    ->label('Producto')
-                                    ->relationship('product', 'name')
+                                Forms\Components\TextInput::make('item_type')
+                                    ->label('Tipo')
+                                    ->formatStateUsing(fn ($record) => $record?->service_id ? 'Servicio' : 'Producto')
+                                    ->disabled()
+                                    ->columnSpan(1),
+
+                                Forms\Components\TextInput::make('item_name')
+                                    ->label('Descripción / Nombre')
+                                    ->formatStateUsing(fn ($record) => $record?->product?->name ?? $record?->service?->name ?? 'N/A')
                                     ->disabled()
                                     ->columnSpan(2),
 
@@ -106,7 +112,7 @@ class InventoryMovementResource extends Resource
                                     ->disabled()
                                     ->columnSpan(1),
                             ])
-                            ->columns(4)
+                            ->columns(5)
                             ->addable(false)
                             ->deletable(false)
                             ->reorderable(false)
@@ -134,7 +140,7 @@ class InventoryMovementResource extends Resource
                     })
                     ->formatStateUsing(fn (string $state): string => match ($state) {
                         'abastecimiento' => 'Entrada (Abastecimiento)',
-                        'venta'          => 'Salida (Venta)',
+                        'venta'          => 'Venta / Servicio',
                         'ajuste_manual'  => 'Ajuste Manual',
                         default          => $state,
                     }),
@@ -169,12 +175,11 @@ class InventoryMovementResource extends Resource
                     ->label('Tipo de Movimiento')
                     ->options([
                         'abastecimiento' => 'Entrada (Abastecimiento)',
-                        'venta'          => 'Salida (Venta)',
+                        'venta'          => 'Venta / Servicio',
                         'ajuste_manual'  => 'Ajuste Manual',
                     ])
                     ->native(),
 
-                // Filtro por Rango de Fechas (Desde / Hasta)
                 Tables\Filters\Filter::make('created_at')
                     ->form([
                         Forms\Components\DatePicker::make('created_from')
@@ -210,9 +215,8 @@ class InventoryMovementResource extends Resource
                     ->icon('heroicon-o-document-arrow-down')
                     ->color('danger')
                     ->action(function ($livewire) {
-                        // Obtenemos la consulta con los filtros activos directamente desde Livewire
                         $movements = $livewire->getFilteredTableQuery()
-                            ->with(['user', 'client'])
+                            ->with(['user', 'client', 'items.product', 'items.service'])
                             ->get();
 
                         $pdf = Pdf::loadView('pdf.inventory-movements', [

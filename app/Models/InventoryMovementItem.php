@@ -13,6 +13,7 @@ class InventoryMovementItem extends Model
     protected $fillable = [
         'inventory_movement_id',
         'product_id',
+        'service_id',
         'quantity',
         'price',
     ];
@@ -22,9 +23,6 @@ class InventoryMovementItem extends Model
         'price'    => 'decimal:2',
     ];
 
-    /**
-     * Accesor para obtener el subtotal calculado dinámicamente
-     */
     public function getSubtotalAttribute(): float
     {
         return (float) ($this->quantity * $this->price);
@@ -38,5 +36,10 @@ class InventoryMovementItem extends Model
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
+    }
+
+    public function service(): BelongsTo
+    {
+        return $this->belongsTo(Service::class);
     }
 }

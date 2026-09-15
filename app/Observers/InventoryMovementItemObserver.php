@@ -12,19 +12,24 @@ class InventoryMovementItemObserver
      */
     public function created(InventoryMovementItem $item): void
     {
+        // Si no hay un producto (es un servicio), ignoramos la alteración de inventario
+        if (! $item->product_id) {
+            return;
+        }
+
         DB::transaction(function () use ($item) {
             $product = $item->product;
             $movementType = $item->movement->type; // 'abastecimiento', 'venta', 'ajuste_manual'
 
             match ($movementType) {
                 // Suma stock al catálogo
-                'abastecimiento' => $product->increment('stock', $item->quantity),
+                'abastecimiento' => $product?->increment('stock', $item->quantity),
 
                 // Resta stock del catálogo
-                'venta'          => $product->decrement('stock', $item->quantity),
+                'venta'          => $product?->decrement('stock', $item->quantity),
 
                 // Reemplaza el stock con el conteo físico exacto
-                'ajuste_manual'  => $product->update(['stock' => $item->quantity]),
+                'ajuste_manual'  => $product?->update(['stock' => $item->quantity]),
 
                 default          => null,
             };
@@ -36,13 +41,18 @@ class InventoryMovementItemObserver
      */
     public function deleted(InventoryMovementItem $item): void
     {
+        // Si no hay un producto (es un servicio), ignoramos la reversión de inventario
+        if (! $item->product_id) {
+            return;
+        }
+
         DB::transaction(function () use ($item) {
             $product = $item->product;
             $movementType = $item->movement->type;
 
             match ($movementType) {
-                'abastecimiento' => $product->decrement('stock', $item->quantity),
-                'venta'          => $product->increment('stock', $item->quantity),
+                'abastecimiento' => $product?->decrement('stock', $item->quantity),
+                'venta'          => $product?->increment('stock', $item->quantity),
                 default          => null,
             };
         });
