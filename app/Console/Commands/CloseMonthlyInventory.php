@@ -9,12 +9,14 @@ use Illuminate\Console\Command;
 class CloseMonthlyInventory extends Command
 {
     protected $signature = 'inventory:close-month';
-    protected $description = 'Genera la fotografía congelada del inventario al cierre de mes';
+    protected $description = 'Toma el stock actual y lo registra como el cierre del mes anterior';
 
     public function handle(): int
     {
-        $year = (int) now()->format('Y');
-        $month = (int) now()->format('m');
+        // Se calcula automáticamente el mes y año recién finalizado
+        $previousMonth = now()->subMonth();
+        $year = (int) $previousMonth->format('Y');
+        $month = (int) $previousMonth->format('m');
 
         if (MonthlyInventory::where('year', $year)->where('month', $month)->exists()) {
             $this->warn("El cierre para el periodo {$month}/{$year} ya existe.");
@@ -38,10 +40,10 @@ class CloseMonthlyInventory extends Command
             'total_products'    => $products->count(),
             'total_stock'       => $products->sum('stock'),
             'total_value'       => $products->sum(fn ($p) => $p->stock * $p->price),
-            'closed_by_user_id' => null, // Registrado de forma automática por el sistema
+            'closed_by_user_id' => null,
         ]);
 
-        $this->info("Cierre de inventario {$month}/{$year} generado con éxito.");
+        $this->info("Cierre registrado con éxito para el periodo {$month}/{$year}.");
         return Command::SUCCESS;
     }
 }
