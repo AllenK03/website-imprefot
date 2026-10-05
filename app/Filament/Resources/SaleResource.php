@@ -38,144 +38,163 @@ class SaleResource extends Resource
                 Forms\Components\Hidden::make('type')->default('venta'),
                 Forms\Components\Hidden::make('user_id')->default(fn () => Auth::id()),
 
-                Forms\Components\Section::make('Datos de la Venta')
-                    ->schema([
-                        Forms\Components\Select::make('client_id')
-                            ->label('Cliente')
-                            ->relationship('client', 'name')
-                            ->getOptionLabelFromRecordUsing(fn (Client $record) => "{$record->name} ({$record->cedula})")
-                            ->searchable(['name', 'cedula'])
-                            ->preload()
-                            ->required()
-                            ->createOptionForm(ClientResource::getFormSchema()),
+            Forms\Components\Section::make('Datos de la Venta')
+                ->schema([
+                    Forms\Components\Select::make('client_id')
+                        ->label('Cliente')
+                        ->relationship('client', 'name')
+                        ->getOptionLabelFromRecordUsing(fn (Client $record) => "{$record->name} ({$record->cedula})")
+                        ->searchable(['name', 'cedula'])
+                        ->preload()
+                        ->required()
+                        ->createOptionForm(ClientResource::getFormSchema()),
 
-                        Forms\Components\TextInput::make('reason')
-                            ->label('Observación')
-                            ->placeholder('Ej: Pedido #1024 - Pago Móvil')
-                            ->dehydrateStateUsing(fn ($state) => blank($state) ? 'Sin observaciones' : $state),
-                    ])->columns(2),
+                    Forms\Components\TextInput::make('reason')
+                        ->label('Observación')
+                        ->placeholder('Ej: Pedido #1024 - Pago Móvil')
+                        ->dehydrateStateUsing(fn ($state) => blank($state) ? 'Sin observaciones' : $state),
+                ])->columns(2),
 
-                Forms\Components\Section::make('Detalle de la Venta')
-                    ->schema([
-                        Forms\Components\Repeater::make('items')
-                            ->relationship()
-                            ->addActionLabel('Agregar ítem (Producto o Servicio)')
-                            ->schema([
-                                // Selector Tipo de Ítem
-                                Forms\Components\Select::make('item_type')
-                                    ->label('Tipo')
-                                    ->options([
-                                        'product' => 'Producto',
-                                        'service' => 'Servicio',
-                                    ])
-                                    ->default('product')
-                                    ->required()
-                                    ->live()
-                                    ->dehydrated(false)
-                                    ->afterStateUpdated(function (Forms\Set $set) {
-                                        $set('product_id', null);
-                                        $set('service_id', null);
-                                        $set('price', 0);
-                                    })
-                                    ->afterStateHydrated(function (Forms\Components\Select $component, $record) {
-                                        if ($record) {
-                                            $component->state($record->service_id ? 'service' : 'product');
-                                        }
-                                    }),
+            Forms\Components\Section::make('Detalle de la Venta')
+                ->schema([
+                    Forms\Components\Repeater::make('items')
+                        ->relationship()
+                        ->addActionLabel('Agregar ítem (Producto o Servicio)')
+                        ->schema([
+                            // Selector Tipo de Ítem
+                            Forms\Components\Select::make('item_type')
+                                ->label('Tipo')
+                                ->options([
+                                    'product' => 'Producto',
+                                    'service' => 'Servicio',
+                                ])
+                                ->default('product')
+                                ->required()
+                                ->live()
+                                ->dehydrated(false)
+                                ->afterStateUpdated(function (Forms\Set $set, Forms\Get $get) {
+                                    $set('product_id', null);
+                                    $set('service_id', null);
+                                    $set('price', 0);
+                                    static::updateTotalAmount($get, $set);
+                                })
+                                ->afterStateHydrated(function (Forms\Components\Select $component, $record) {
+                                    if ($record) {
+                                        $component->state($record->service_id ? 'service' : 'product');
+                                    }
+                                }),
 
-                                // Select Producto (visible solo si Tipo == product)
-                                Forms\Components\Select::make('product_id')
-                                    ->label('Producto')
-                                    ->options(Product::pluck('name', 'id'))
-                                    ->searchable()
-                                    ->required(fn (Forms\Get $get) => $get('item_type') === 'product')
-                                    ->visible(fn (Forms\Get $get) => $get('item_type') === 'product')
-                                    ->live()
-                                    ->afterStateUpdated(function ($state, Forms\Set $set, Forms\Get $get) {
-                                        $product = Product::find($state);
-                                        if ($product) {
-                                            $set('price', $product->price);
-                                        }
-                                        static::updateTotalAmount($get, $set);
-                                    }),
+                            // Select Producto
+                            Forms\Components\Select::make('product_id')
+                                ->label('Producto')
+                                ->options(Product::pluck('name', 'id'))
+                                ->searchable()
+                                ->required(fn (Forms\Get $get) => $get('item_type') === 'product')
+                                ->visible(fn (Forms\Get $get) => $get('item_type') === 'product')
+                                ->live()
+                                ->afterStateUpdated(function ($state, Forms\Set $set, Forms\Get $get) {
+                                    $product = Product::find($state);
+                                    $price = $product ? $product->price : 0;
+                                    $set('price', $price);
+                                    
+                                    static::updateTotalAmount($get, $set);
+                                }),
 
-                                // Select Servicio (visible solo si Tipo == service)
-                                Forms\Components\Select::make('service_id')
-                                    ->label('Servicio')
-                                    ->options(Service::where('is_active', true)->pluck('name', 'id'))
-                                    ->searchable()
-                                    ->required(fn (Forms\Get $get) => $get('item_type') === 'service')
-                                    ->visible(fn (Forms\Get $get) => $get('item_type') === 'service')
-                                    ->live(),
+                            // Select Servicio
+                            Forms\Components\Select::make('service_id')
+                                ->label('Servicio')
+                                ->options(Service::where('is_active', true)->pluck('name', 'id'))
+                                ->searchable()
+                                ->required(fn (Forms\Get $get) => $get('item_type') === 'service')
+                                ->visible(fn (Forms\Get $get) => $get('item_type') === 'service')
+                                ->live()
+                                ->afterStateUpdated(fn (Forms\Get $get, Forms\Set $set) => static::updateTotalAmount($get, $set)),
 
-                                Forms\Components\TextInput::make('quantity')
-                                    ->label('Cantidad')
-                                    ->numeric()
-                                    ->default(1)
-                                    ->minValue(1)
-                                    ->maxValue(function (Forms\Get $get) {
-                                        if ($get('item_type') === 'service') {
-                                            return null; // Sin límite de stock para servicios
-                                        }
-                                        $productId = $get('product_id');
-                                        if (! $productId) {
-                                            return 1;
-                                        }
-                                        $product = Product::find($productId);
-                                        return $product ? $product->stock : 1;
-                                    })
-                                    ->helperText(function (Forms\Get $get) {
-                                        if ($get('item_type') === 'service') {
-                                            return 'Servicio (no descuenta stock)';
-                                        }
-                                        $productId = $get('product_id');
-                                        if (! $productId) {
-                                            return null;
-                                        }
-                                        $product = Product::find($productId);
-                                        return $product ? "Stock: {$product->stock} unid." : null;
-                                    })
-                                    ->validationMessages([
-                                        'max' => 'La cantidad supera el stock disponible (:max unidades).',
-                                    ])
-                                    ->required()
-                                    ->live(onBlur: true)
-                                    ->afterStateUpdated(fn (Forms\Get $get, Forms\Set $set) => static::updateTotalAmount($get, $set)),
+                            // Cantidad
+                            Forms\Components\TextInput::make('quantity')
+                                ->label('Cantidad')
+                                ->numeric()
+                                ->default(1)
+                                ->minValue(1)
+                                ->maxValue(function (Forms\Get $get) {
+                                    if ($get('item_type') === 'service') {
+                                        return null;
+                                    }
+                                    $productId = $get('product_id');
+                                    if (! $productId) {
+                                        return 1;
+                                    }
+                                    $product = Product::find($productId);
+                                    return $product ? $product->stock : 1;
+                                })
+                                ->helperText(function (Forms\Get $get) {
+                                    if ($get('item_type') === 'service') {
+                                        return 'Servicio (no descuenta stock)';
+                                    }
+                                    $productId = $get('product_id');
+                                    if (! $productId) {
+                                        return null;
+                                    }
+                                    $product = Product::find($productId);
+                                    return $product ? "Stock: {$product->stock} unid." : null;
+                                })
+                                ->validationMessages([
+                                    'max' => 'La cantidad supera el stock disponible (:max unidades).',
+                                ])
+                                ->required()
+                                ->live(debounce: 300)
+                                ->afterStateUpdated(fn (Forms\Get $get, Forms\Set $set) => static::updateTotalAmount($get, $set)),
 
-                                Forms\Components\TextInput::make('price')
-                                    ->label('Precio Unitario ($)')
-                                    ->numeric()
-                                    ->prefix('$')
-                                    ->required()
-                                    ->live(onBlur: true)
-                                    ->afterStateUpdated(fn (Forms\Get $get, Forms\Set $set) => static::updateTotalAmount($get, $set)),
-                            ])
-                            ->columns(4)
-                            ->minItems(1)
-                            ->live()
-                            ->afterStateUpdated(fn (Forms\Get $get, Forms\Set $set) => static::updateTotalAmount($get, $set)),
+                            // Precio Unitario
+                            Forms\Components\TextInput::make('price')
+                                ->label('Precio Unitario ($)')
+                                ->numeric()
+                                ->prefix('$')
+                                ->required()
+                                ->live(debounce: 300)
+                                ->afterStateUpdated(fn (Forms\Get $get, Forms\Set $set) => static::updateTotalAmount($get, $set)),
+                        ])
+                        ->columns(4)
+                        ->minItems(1)
+                        ->live()
+                        ->afterStateUpdated(fn (Forms\Get $get, Forms\Set $set) => static::updateTotalAmount($get, $set)),
 
-                        Forms\Components\TextInput::make('total_amount')
-                            ->label('Monto Total ($)')
-                            ->numeric()
-                            ->prefix('$')
-                            ->readOnly()
-                            ->default(0.00),
-                    ]),
-            ]);
+                    Forms\Components\TextInput::make('total_amount')
+                        ->label('Monto Total ($)')
+                        ->numeric()
+                        ->prefix('$')
+                        ->readOnly()
+                        ->default(0.00),
+                ]),
+        ]);
+}
+
+protected static function updateTotalAmount(Forms\Get $get, Forms\Set $set): void
+{
+    // Obtenemos los ítems del repeater (si estamos dentro del repeater, retrocedemos al nivel raíz)
+    $items = $get('../../items') ?? $get('items') ?? [];
+    
+    $total = 0;
+
+    foreach ($items as $item) {
+        $qty = (float) ($item['quantity'] ?? 0);
+        $price = (float) ($item['price'] ?? 0);
+
+        // Si es un producto y aún no se ha registrado el precio en el array del ítem, buscamos el valor del producto directamente
+        if (($item['item_type'] ?? 'product') === 'product' && !empty($item['product_id']) && $price == 0) {
+            $product = Product::find($item['product_id']);
+            if ($product) {
+                $price = (float) $product->price;
+            }
+        }
+
+        $total += ($qty * $price);
     }
 
-    protected static function updateTotalAmount(Forms\Get $get, Forms\Set $set): void
-    {
-        $items = $get('items') ?? [];
-        $total = array_reduce($items, function ($sum, $item) {
-            $qty = (float) ($item['quantity'] ?? 0);
-            $price = (float) ($item['price'] ?? 0);
-            return $sum + ($qty * $price);
-        }, 0);
-
-        $set('total_amount', $total);
-    }
+    // Seteamos el total en la raíz del formulario
+    $set('../../total_amount', round($total, 2));
+    $set('total_amount', round($total, 2));
+}
 
     public static function table(Table $table): Table
     {
